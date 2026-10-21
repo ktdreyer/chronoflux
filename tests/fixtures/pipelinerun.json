@@ -1,0 +1,22 @@
+{
+  "apiVersion": "tekton.dev/v1",
+  "kind": "PipelineRun",
+  "metadata": {
+    "name": "component-build-abc12",
+    "namespace": "ai-tenant",
+    "uid": "11111111-2222-3333-4444-555555555555",
+    "creationTimestamp": "2025-02-12T10:02:00Z",
+    "labels": {"appstudio.redhat.com/component": "verified-component", "appstudio.redhat.com/application": "rhaiis"},
+    "annotations": {
+      "pipelinesascode.tekton.dev/repo": "https://gitlab.example.invalid/redhat/rhel-ai/rhaiis/containers",
+      "pipelinesascode.tekton.dev/sha": "0123456789abcdef0123456789abcdef01234567",
+      "pipelinesascode.tekton.dev/event-type": "pull_request"
+    }
+  },
+  "spec": {"params": [{"name": "revision", "value": "0123456789abcdef0123456789abcdef01234567"}]},
+  "status": {
+    "startTime": "2025-02-12T10:03:00Z",
+    "completionTime": "2025-02-12T10:22:00Z",
+    "conditions": [{"type": "Succeeded", "status": "True", "reason": "Succeeded"}]
+  }
+}

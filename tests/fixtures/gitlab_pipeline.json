@@ -1,0 +1,15 @@
+{
+  "id": 18290001,
+  "project_id": 730001,
+  "sha": "0123456789abcdef0123456789abcdef01234567",
+  "ref": "refs/merge-requests/1458/head",
+  "source": "merge_request_event",
+  "status": "failed",
+  "created_at": "2025-02-12T10:00:00.000Z",
+  "started_at": "2025-02-12T10:01:00.000Z",
+  "finished_at": "2025-02-12T10:17:00.000Z",
+  "updated_at": "2025-02-12T10:17:03.000Z",
+  "duration": 960.0,
+  "queued_duration": 12.4,
+  "web_url": "https://gitlab.example.invalid/group/project/-/pipelines/18290001"
+}

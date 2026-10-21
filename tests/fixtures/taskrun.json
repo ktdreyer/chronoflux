@@ -1,0 +1,18 @@
+{
+  "apiVersion": "tekton.dev/v1",
+  "kind": "TaskRun",
+  "metadata": {
+    "name": "component-build-abc12-buildah",
+    "namespace": "ai-tenant",
+    "uid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    "creationTimestamp": "2025-02-12T10:04:00Z",
+    "ownerReferences": [{"apiVersion": "tekton.dev/v1", "kind": "PipelineRun", "name": "component-build-abc12", "uid": "11111111-2222-3333-4444-555555555555"}],
+    "labels": {"tekton.dev/pipelineRun": "component-build-abc12", "tekton.dev/pipelineTask": "build-image"}
+  },
+  "spec": {"params": [{"name": "platform", "value": "x86_64"}]},
+  "status": {
+    "startTime": "2025-02-12T10:05:00Z",
+    "completionTime": "2025-02-12T10:18:00Z",
+    "conditions": [{"type": "Succeeded", "status": "True", "reason": "Succeeded"}]
+  }
+}

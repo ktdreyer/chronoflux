@@ -38,7 +38,7 @@ For initial deployment, restrict extraction to `rhaiis/containers` and its Konfl
 
 ## 3. BigQuery data model
 
-Create a `ci_build_metrics` dataset. Partition tables by `DATE(created_at)` (Konflux: `metadata.creationTimestamp`) so incomplete runs also have a partition. Keep the source host or cluster in every identity; names alone are not globally unique. Timestamps are nullable until known. Retain a source URL and `ingested_at` on each record. Use `FLOAT64` for fractional seconds where supplied, rather than rounding away short queue times.
+Create a `chronoflux` dataset in the chosen GCP project, with a dataset description linking to https://github.com/ktdreyer/chronoflux and an `app:chronoflux` label. Partition tables by `DATE(created_at)` (Konflux: `metadata.creationTimestamp`) so incomplete runs also have a partition. Keep the source host or cluster in every identity; names alone are not globally unique. Timestamps are nullable until known. Retain a source URL and `ingested_at` on each record. Use `FLOAT64` for fractional seconds where supplied, rather than rounding away short queue times.
 
 BigQuery does **not** enforce primary-key uniqueness. Before each `MERGE`, deduplicate the staging batch to one row per composite identity (for example, with `ROW_NUMBER()` ordered by observation time). An upsert must update a previously incomplete run when it finishes, while preserving distinct reruns/retries. Never merge directly from a batch containing duplicate keys.
 

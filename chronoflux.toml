@@ -1,0 +1,15 @@
+[scopes.rhaiis-containers]
+gitlab_host = "https://gitlab.com"
+gitlab_project = "redhat/rhel-ai/rhaiis/containers"
+gitlab_project_id = 0
+cluster = "stone-prod-p02"
+api_server = "https://api.konflux.example.com:6443"
+namespace = "ai-tenant"
+application = "rhaiis"
+# Add only mappings verified against the Konflux component labels.
+variant_components = {}
+
+[bigquery]
+# Provision this dataset separately; the collector does not create datasets.
+project = "aipcc-cicd"
+dataset = "chronoflux"

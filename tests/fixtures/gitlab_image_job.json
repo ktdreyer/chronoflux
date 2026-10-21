@@ -1,0 +1,17 @@
+{
+  "id": 990001,
+  "pipeline": {"id": 18290001},
+  "name": "build-image-mr-rocm-x86_64",
+  "stage": "build",
+  "status": "success",
+  "allow_failure": false,
+  "failure_reason": null,
+  "created_at": "2025-02-12T10:02:00.000Z",
+  "started_at": "2025-02-12T10:03:00.000Z",
+  "finished_at": "2025-02-12T10:15:00.000Z",
+  "duration": 720.0,
+  "queued_duration": 8.2,
+  "web_url": "https://gitlab.example.invalid/group/project/-/jobs/990001",
+  "runner": {"id": 44},
+  "tag_list": ["rhel-ai", "build"]
+}
