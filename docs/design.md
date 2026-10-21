@@ -120,7 +120,7 @@ The first milestone is done when we can:
 
 ## References
 
-* [RHAI-10822 initial comparison](https://issues.redhat.com/browse/RHAI-10822)
+* [RHAI-10822 issue](https://redhat.atlassian.net/browse/RHAI-10822)
 * [GitHub workflow runs REST API](https://docs.github.com/en/rest/actions/workflow-runs?apiVersion=2022-11-28#list-workflow-runs-for-a-repository)
 * [GitLab pipelines REST API](https://docs.gitlab.com/api/pipelines/)
 * [GitLab jobs REST API](https://docs.gitlab.com/api/jobs/)
