@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import http.client
 import os
 import re
 import shutil
@@ -47,6 +48,12 @@ def _get_json(url: str, headers: dict[str, str] | None = None) -> Any:
             delay = min(float(retry_after), 10.0) if retry_after.isdigit() else 0.25 * (2 ** attempt)
             time.sleep(delay)
         except (urllib.error.URLError, TimeoutError) as error:
+            if attempt == 2:
+                raise SourceError(f"GET {url}: {error} after 3 attempts") from error
+            time.sleep(0.25 * (2 ** attempt))
+        # KubeArchive serves large chunked responses that the server sometimes
+        # drops mid-transfer; retry those like any other transient failure.
+        except (http.client.HTTPException, ConnectionError) as error:
             if attempt == 2:
                 raise SourceError(f"GET {url}: {error} after 3 attempts") from error
             time.sleep(0.25 * (2 ** attempt))

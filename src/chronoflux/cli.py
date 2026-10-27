@@ -46,8 +46,9 @@ def _parser() -> argparse.ArgumentParser:
     sync.add_argument("--dry-run", action="store_true")
     compare = commands.add_parser("compare", help="Compare image jobs with Konflux builds from BigQuery")
     compare.add_argument("--scope", default="rhaiis-containers")
-    selector = compare.add_mutually_exclusive_group(required=True)
-    selector.add_argument("--sha")
+    # Either --sha or the --since/--until pair; _run_compare validates the
+    # combination (a mutually exclusive group cannot hold both range args).
+    compare.add_argument("--sha")
     compare.add_argument("--since", type=_time)
     compare.add_argument("--until", type=_time)
     compare.add_argument("--variant")
