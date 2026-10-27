@@ -76,9 +76,15 @@ def _source_extract(scope: Scope, source: str, since: datetime, until: datetime,
 
 def _summary(rows: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
     ids: list[str] = []
+    id_fields = {
+        "gitlab_pipelines": "pipeline_id",
+        "gitlab_jobs": "job_id",
+        "konflux_pipelineruns": "resource_uid",
+        "konflux_taskruns": "resource_uid",
+    }
     for kind, records in rows.items():
         for row in records[:5]:
-            ids.append(f"{kind}:{row.get('pipeline_id') or row.get('job_id') or row.get('resource_uid') or row.get('pipelinerun_name') or row.get('taskrun_name')}")
+            ids.append(f"{kind}:{row.get(id_fields[kind])}")
     return {"counts": {name: len(items) for name, items in rows.items()}, "sample_ids": ids}
 
 

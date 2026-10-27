@@ -65,7 +65,7 @@ class BigQueryStore:
             load = self.client.load_table_from_json(enriched, staging.strip("`"), job_config=self.bigquery.LoadJobConfig(schema=target_table.schema, write_disposition="WRITE_TRUNCATE"))
             load.result()
             key_match = " AND ".join(f"T.{key}=S.{key}" for key in keys)
-            update = ", ".join(f"{field}=S.{field}" for field in target_table.schema if field.name not in keys)
+            update = ", ".join(f"{field.name}=S.{field.name}" for field in target_table.schema if field.name not in keys)
             columns = ", ".join(field.name for field in target_table.schema)
             values = ", ".join(f"S.{field.name}" for field in target_table.schema)
             sql = f"""

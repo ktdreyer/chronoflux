@@ -2,7 +2,8 @@ WITH mappings AS (
   SELECT JSON_VALUE(entry, '$.variant') AS variant, JSON_VALUE(entry, '$.component') AS component
   FROM UNNEST(JSON_QUERY_ARRAY(PARSE_JSON(@component_map))) AS entry
 ), gl AS (
-  SELECT p.sha, j.variant, j.architecture, j.status AS job_status, j.web_url AS job_url,
+  SELECT p.sha, j.variant, j.architecture, m.component AS mapped_component,
+         j.status AS job_status, j.web_url AS job_url,
          j.created_at AS job_created_at, j.started_at AS job_started_at, j.finished_at AS job_finished_at,
          j.duration_seconds AS job_duration_seconds, j.queued_duration_seconds, j.allow_failure, j.failure_reason,
          p.status AS pipeline_status,
@@ -11,6 +12,7 @@ WITH mappings AS (
          COUNT(*) OVER (PARTITION BY p.pipeline_id, j.name) - 1 AS retry_count
   FROM {gitlab_jobs} j JOIN {gitlab_pipelines} p
     ON p.gitlab_host=j.gitlab_host AND p.pipeline_id=j.pipeline_id
+  LEFT JOIN mappings m ON m.variant=j.variant
   WHERE p.project_path=@project_path AND p.gitlab_host=@gitlab_host
     AND j.job_kind='build-image'
     AND (@sha IS NULL OR p.sha=@sha)
@@ -59,8 +61,8 @@ SELECT COALESCE(gl.sha,k.sha) AS sha, gl.variant, gl.architecture, k.component, 
             ELSE 'matched' END AS match_status
 FROM gl FULL OUTER JOIN k
   ON gl.sha=k.sha
-  AND EXISTS (SELECT 1 FROM mappings m WHERE m.variant=gl.variant AND m.component=k.component)
- AND gl.architecture=k.platform
+  AND gl.mapped_component=k.component
+  AND gl.architecture=k.platform
 WHERE (gl.attempt_rank=1 OR gl.attempt_rank IS NULL)
   AND (k.konflux_attempt_rank=1 OR k.konflux_attempt_rank IS NULL)
 ORDER BY sha, variant, component;

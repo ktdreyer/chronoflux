@@ -27,6 +27,7 @@ namespace = "ai-tenant"
     assert cli._run_backfill(args, load_config(config_path).scopes["test"], load_config(config_path)) == 0
     result = json.loads(capsys.readouterr().out)
     assert result["counts"] == {"gitlab_pipelines": 1, "gitlab_jobs": 1}
+    assert result["sample_ids"] == ["gitlab_pipelines:18", "gitlab_jobs:19"]
     assert result["dry_run"] is True
 
 
