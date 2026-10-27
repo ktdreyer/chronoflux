@@ -18,6 +18,7 @@ class Scope:
     api_server: str = ""
     application: str = ""
     variant_components: dict[str, str] = field(default_factory=dict)
+    label_selectors: list[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)

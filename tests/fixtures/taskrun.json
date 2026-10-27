@@ -2,14 +2,22 @@
   "apiVersion": "tekton.dev/v1",
   "kind": "TaskRun",
   "metadata": {
-    "name": "component-build-abc12-buildah",
+    "name": "rhaiis-rocm-ubi9-on-pull-request-abc12-build-container",
     "namespace": "ai-tenant",
     "uid": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
     "creationTimestamp": "2025-02-12T10:04:00Z",
-    "ownerReferences": [{"apiVersion": "tekton.dev/v1", "kind": "PipelineRun", "name": "component-build-abc12", "uid": "11111111-2222-3333-4444-555555555555"}],
-    "labels": {"tekton.dev/pipelineRun": "component-build-abc12", "tekton.dev/pipelineTask": "build-image"}
+    "ownerReferences": [{"apiVersion": "tekton.dev/v1", "kind": "PipelineRun", "name": "rhaiis-rocm-ubi9-on-pull-request-abc12", "uid": "11111111-2222-3333-4444-555555555555"}],
+    "labels": {
+      "tekton.dev/pipelineRun": "rhaiis-rocm-ubi9-on-pull-request-abc12",
+      "tekton.dev/pipelineRunUID": "11111111-2222-3333-4444-555555555555",
+      "tekton.dev/pipelineTask": "build-container",
+      "build.appstudio.redhat.com/target-platform": "linux-x86_64",
+      "appstudio.openshift.io/component": "rhaiis-rocm-ubi9",
+      "pipelines.appstudio.openshift.io/type": "build",
+      "pipelinesascode.tekton.dev/url-repository": "containers"
+    }
   },
-  "spec": {"params": [{"name": "platform", "value": "x86_64"}]},
+  "spec": {"params": [{"name": "PLATFORM", "value": "linux/x86_64"}]},
   "status": {
     "startTime": "2025-02-12T10:05:00Z",
     "completionTime": "2025-02-12T10:18:00Z",

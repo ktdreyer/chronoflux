@@ -2,15 +2,26 @@
   "apiVersion": "tekton.dev/v1",
   "kind": "PipelineRun",
   "metadata": {
-    "name": "component-build-abc12",
+    "name": "rhaiis-rocm-ubi9-on-pull-request-abc12",
     "namespace": "ai-tenant",
     "uid": "11111111-2222-3333-4444-555555555555",
     "creationTimestamp": "2025-02-12T10:02:00Z",
-    "labels": {"appstudio.redhat.com/component": "verified-component", "appstudio.redhat.com/application": "rhaiis"},
-    "annotations": {
-      "pipelinesascode.tekton.dev/repo": "https://gitlab.example.invalid/redhat/rhel-ai/rhaiis/containers",
+    "labels": {
+      "appstudio.openshift.io/component": "rhaiis-rocm-ubi9",
+      "appstudio.openshift.io/application": "rhaiis",
+      "pipelines.appstudio.openshift.io/type": "build",
+      "pipelinesascode.tekton.dev/event-type": "Merge_Request",
       "pipelinesascode.tekton.dev/sha": "0123456789abcdef0123456789abcdef01234567",
-      "pipelinesascode.tekton.dev/event-type": "pull_request"
+      "pipelinesascode.tekton.dev/url-repository": "containers"
+    },
+    "annotations": {
+      "build.appstudio.redhat.com/commit_sha": "0123456789abcdef0123456789abcdef01234567",
+      "build.appstudio.redhat.com/pull_request_number": "1458",
+      "build.appstudio.redhat.com/target_branch": "main",
+      "pipelinesascode.tekton.dev/log-url": "https://konflux-ui.example.invalid/ns/ai-tenant/pipelinerun/rhaiis-rocm-ubi9-on-pull-request-abc12",
+      "pipelinesascode.tekton.dev/event-type": "Merge_Request",
+      "pipelinesascode.tekton.dev/repo-url": "https://gitlab.example.invalid/redhat/rhel-ai/rhaiis/containers",
+      "pipelinesascode.tekton.dev/source-branch": "example-user/example-source-branch"
     }
   },
   "spec": {"params": [{"name": "revision", "value": "0123456789abcdef0123456789abcdef01234567"}]},

@@ -69,7 +69,7 @@ def _source_extract(scope: Scope, source: str, since: datetime, until: datetime,
             project_id = int(extractor.project_info()["id"])
         pipelines, jobs = extractor.extract(since, until, project_id, scope.gitlab_project, updated_after)
         return {"gitlab_pipelines": pipelines, "gitlab_jobs": jobs}
-    extractor = KonfluxExtractor(scope.cluster, scope.namespace, expected_server=scope.api_server)
+    extractor = KonfluxExtractor(scope.cluster, scope.namespace, expected_server=scope.api_server, label_selectors=scope.label_selectors)
     pipelineruns, taskruns = extractor.extract(since, until)
     return {"konflux_pipelineruns": pipelineruns, "konflux_taskruns": taskruns}
 
@@ -226,7 +226,7 @@ def _run_doctor(args: argparse.Namespace, scope: Scope, config: Config) -> int:
                 extractor.check()
                 detail = "GitLab project, pipeline, and retried-job APIs reachable (read access only)"
             elif source == "konflux":
-                extractor = KonfluxExtractor(scope.cluster, scope.namespace, expected_server=scope.api_server)
+                extractor = KonfluxExtractor(scope.cluster, scope.namespace, expected_server=scope.api_server, label_selectors=scope.label_selectors)
                 extractor.check("live")
                 try:
                     extractor.check("archive")

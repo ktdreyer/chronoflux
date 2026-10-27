@@ -82,12 +82,52 @@ def test_tekton_mappings_keep_identity_conditions_and_task_parent():
     assert pipeline["resource_uid"] == "11111111-2222-3333-4444-555555555555"
     assert pipeline["commit_sha"] == fixture("gitlab_pipeline.json")["sha"]
     assert pipeline["condition_status"] == "True"
-    assert pipeline["component"] == "verified-component"
+    assert pipeline["component"] == "rhaiis-rocm-ubi9"
+    assert pipeline["application"] == "rhaiis"
+    assert pipeline["target_branch"] == "main"
+    assert pipeline["pull_request_number"] == "1458"
+    assert pipeline["event"] == "Merge_Request"
+    assert pipeline["web_url"].startswith("https://konflux-ui.example.invalid/")
     assert task["pipelinerun_uid"] == pipeline["resource_uid"]
-    assert task["pipeline_task"] == "build-image"
+    assert task["pipeline_task"] == "build-container"
     assert task["platform"] == "x86_64"
     assert task["condition_reason"] == "Succeeded"
     assert task["observation_source"] == "archive"
+
+
+def test_platform_values_normalize_to_gitlab_architectures():
+    resource = fixture("taskrun.json")
+    for raw, expected in (("linux/x86_64", "x86_64"), ("linux-aarch64", "aarch64"),
+                          ("x86_64", "x86_64"), ("linux-ppc64le", "ppc64le")):
+        resource["metadata"]["labels"]["build.appstudio.redhat.com/target-platform"] = raw
+        assert map_taskrun(resource, "p02", "ai-tenant", "live")["platform"] == expected
+    del resource["metadata"]["labels"]["build.appstudio.redhat.com/target-platform"]
+    resource["spec"]["params"] = [{"name": "PLATFORM", "value": "linux/s390x"}]
+    assert map_taskrun(resource, "p02", "ai-tenant", "live")["platform"] == "s390x"
+
+
+def test_taskrun_without_platform_stays_null():
+    resource = fixture("taskrun.json")
+    del resource["metadata"]["labels"]["build.appstudio.redhat.com/target-platform"]
+    resource["spec"]["params"] = []
+    assert map_taskrun(resource, "p02", "ai-tenant", "live")["platform"] is None
+
+
+def test_taskrun_parent_falls_back_to_tekton_labels():
+    resource = fixture("taskrun.json")
+    resource["metadata"].pop("ownerReferences")
+    mapped = map_taskrun(resource, "p02", "ai-tenant", "live")
+    assert mapped["pipelinerun_uid"] == "11111111-2222-3333-4444-555555555555"
+    assert mapped["pipelinerun_name"] == "rhaiis-rocm-ubi9-on-pull-request-abc12"
+
+
+def test_label_selectors_are_sent_to_konflux_listings(monkeypatch):
+    extractor = KonfluxExtractor("p02", "ai-tenant", label_selectors=["pipelines.appstudio.openshift.io/type=build"])
+    query = extractor._query("500", "token")
+    assert query["labelSelector"] == "pipelines.appstudio.openshift.io/type=build"
+    assert query["continue"] == "token"
+    bare = KonfluxExtractor("p02", "ai-tenant")
+    assert "labelSelector" not in bare._query("500", None)
 
 
 def test_konflux_pagination_and_live_archive_deduplication(monkeypatch):
@@ -117,6 +157,32 @@ def test_unknown_succeeded_condition_remains_unknown():
     resource["status"]["conditions"][0]["status"] = "Unknown"
     mapped = map_pipelinerun(resource, "p02", "ai-tenant", "live")
     assert mapped["condition_status"] == "Unknown"
+
+
+def test_windowed_archive_walk_stops_at_pages_before_since(monkeypatch):
+    extractor = KonfluxExtractor("p02", "ai-tenant", archive_url="https://archive.example.invalid")
+
+    def make_pages():
+        return [
+            {"items": [fixture("taskrun.json")], "metadata": {"continue": "next"}},
+            {"items": [fixture("taskrun.json")], "metadata": {"continue": "last"}},
+            {"items": [{"metadata": {"name": "old", "uid": "z", "creationTimestamp": "2025-01-01T00:00:00Z"}}], "metadata": {}},
+        ]
+
+    seen = {"pipelineruns": [], "taskruns": []}
+    remaining = {"pipelineruns": make_pages(), "taskruns": make_pages()}
+
+    def fake_page(resource, continuation):
+        seen[resource].append(continuation)
+        return remaining[resource].pop(0)
+
+    monkeypatch.setattr(extractor, "_archive_page", fake_page)
+    monkeypatch.setattr(extractor, "_live_page", lambda _resource, _token: {"items": [], "metadata": {}})
+    runs, tasks = extractor.extract(SINCE, UNTIL)
+    for resource, continuations in seen.items():
+        assert continuations == [None, "next", "last"]  # stopped after the pre-window page
+    assert len(tasks) == 1  # the pre-window TaskRun was filtered out
+    assert len(runs) == 1
 
 
 def test_konflux_refuses_resources_without_stable_uid(monkeypatch):

@@ -36,7 +36,11 @@ def test_config_keeps_scope_component_map():
     scope = load_config(config_path).scopes["rhaiis-containers"]
     assert scope.namespace == "ai-tenant"
     assert scope.api_server == "https://api.konflux.example.com:6443"
-    assert scope.variant_components == {}
+    assert scope.variant_components["rocm"] == "rhaiis-rocm-ubi9*"
+    assert scope.label_selectors == [
+        "pipelines.appstudio.openshift.io/type=build",
+        "pipelinesascode.tekton.dev/url-repository=containers",
+    ]
 
 
 class FakeStore:

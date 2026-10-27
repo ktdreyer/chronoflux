@@ -6,8 +6,19 @@ cluster = "stone-prod-p02"
 api_server = "https://api.konflux.example.com:6443"
 namespace = "ai-tenant"
 application = "rhaiis"
-# Add only mappings verified against the Konflux component labels.
-variant_components = {}
+# Server-side selectors verified against p02 ai-tenant in October 2026. They
+# restrict listing to build PipelineRuns/TaskRuns for the containers repository;
+# without them, KubeArchive pagination over the whole namespace is impractical.
+label_selectors = [
+  "pipelines.appstudio.openshift.io/type=build",
+  "pipelinesascode.tekton.dev/url-repository=containers",
+]
+# Variant-to-component mappings verified against real archived runs
+# (RHAI-10822): each containers-repo SHA builds exactly one rhaiis component,
+# named "rhaiis-<variant>-ubi9" plus a release-stream suffix such as "-3-6"
+# chosen by the merge request's target branch. The trailing '*' matches those
+# stream suffixes. Keep mappings exact if that convention ever changes.
+variant_components = { cpu = "rhaiis-cpu-ubi9*", cpu-pz = "rhaiis-cpu-pz-ubi9*", cuda = "rhaiis-cuda-ubi9*", gaudi = "rhaiis-gaudi-ubi9*", model-opt-cuda = "rhaiis-model-opt-cuda-ubi9*", neuron = "rhaiis-neuron-ubi9*", rocm = "rhaiis-rocm-ubi9*", rubin = "rhaiis-rubin-ubi9*", spyre = "rhaiis-spyre-ubi9*", tpu = "rhaiis-tpu-ubi9*", vllm-omni-cuda = "rhaiis-vllm-omni-cuda-ubi9*" }
 
 [bigquery]
 # Provision this dataset separately; the collector does not create datasets.
