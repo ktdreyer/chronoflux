@@ -1,4 +1,7 @@
-# Looker Studio dashboard setup
+# Data Studio dashboard setup
+
+> Google renamed Looker Studio back to Data Studio; links now redirect to
+> `datastudio.google.com`. The steps below work on either name.
 
 The `aipcc-cicd.chronoflux.ci_build_comparison` BigQuery view holds one row
 per GitLab image job / Konflux build pairing (plus unmatched rows from either
@@ -7,10 +10,13 @@ automatically as `chronoflux sync`/`backfill` loads more data.
 
 ## Create the report
 
-1. Open <https://lookerstudio.google.com/navigation/report/new>.
-2. In **Add data to report**, pick **BigQuery** and authorize with your Red
-   Hat Google account (the one with access to the `aipcc-cicd` project).
-3. Select **My Projects → aipcc-cicd → chronoflux → ci_build_comparison**
+1. Open <https://datastudio.google.com/navigation/reporting> (the reports
+   home; sign in with your Red Hat Google account).
+2. Click **Create** (or the + tile) and choose **Report** to start a new,
+   blank report.
+3. In **Add data to report**, pick **BigQuery** and authorize with the account
+   that has access to the `aipcc-cicd` project.
+4. Select **My Projects → aipcc-cicd → chronoflux → ci_build_comparison**
    and click **Add**.
 
 ## Recommended charts
