@@ -24,14 +24,22 @@ WITH mappings AS (
     AND (@sha IS NULL OR p.sha=@sha)
     AND (@sha IS NOT NULL OR (p.created_at>=@since AND p.created_at<@until))
     AND (@variant IS NULL OR j.variant=@variant)
-), run_tasks AS (
+ ), run_tasks AS (
   -- One summary per PipelineRun: every TaskRun, regardless of platform, so
   -- queue and execution time stay visible for platform-agnostic tasks.
+  -- Build-container runs for different architectures overlap: MAX is the
+  -- critical-path build duration, not the sum of concurrent TaskRuns.
   SELECT t.cluster, t.namespace, t.pipelinerun_uid, t.pipelinerun_name,
          STRING_AGG(CONCAT(COALESCE(t.pipeline_task, t.taskrun_name), ':', COALESCE(t.condition_status, 'Unknown'),
                            ' [create→start=', COALESCE(CAST(SAFE_DIVIDE(TIMESTAMP_DIFF(t.start_time, t.created_at, MICROSECOND), 1000000.0) AS STRING), '?'),
                            's, execution=', COALESCE(CAST(SAFE_DIVIDE(TIMESTAMP_DIFF(t.completion_time, t.start_time, MICROSECOND), 1000000.0) AS STRING), '?'), 's]'),
-                    '\n' ORDER BY t.start_time) AS task_summary
+                     '\n' ORDER BY t.start_time) AS task_summary,
+         MAX(IF(t.pipeline_task='prefetch-dependencies', TIMESTAMP_DIFF(t.completion_time, t.start_time, SECOND), NULL)) AS prefetch_seconds,
+         MAX(IF(t.pipeline_task='build-container', TIMESTAMP_DIFF(t.completion_time, t.start_time, SECOND), NULL)) AS build_critical_seconds,
+         MAX(IF(t.pipeline_task='build-container' AND t.platform='x86_64', TIMESTAMP_DIFF(t.completion_time, t.start_time, SECOND), NULL)) AS build_x86_seconds,
+         MAX(IF(t.pipeline_task='build-container' AND t.platform IS NOT NULL AND t.platform!='x86_64', TIMESTAMP_DIFF(t.completion_time, t.start_time, SECOND), NULL)) AS build_other_seconds,
+         MAX(IF(t.pipeline_task='build-image-index', TIMESTAMP_DIFF(t.completion_time, t.start_time, SECOND), NULL)) AS index_seconds,
+         MAX(IF(t.pipeline_task='build-source-image', TIMESTAMP_DIFF(t.completion_time, t.start_time, SECOND), NULL)) AS source_image_seconds
   FROM {konflux_taskruns} t
   GROUP BY t.cluster, t.namespace, t.pipelinerun_uid, t.pipelinerun_name
 ), run_platforms AS (
@@ -48,7 +56,8 @@ WITH mappings AS (
          ROW_NUMBER() OVER (PARTITION BY p.commit_sha, p.component, rp.platform
                             ORDER BY p.completion_time DESC NULLS LAST, p.created_at DESC) AS konflux_attempt_rank,
          COUNT(*) OVER (PARTITION BY p.commit_sha, p.component, rp.platform) AS konflux_run_count,
-         rt.task_summary
+          rt.task_summary, rt.prefetch_seconds, rt.build_critical_seconds,
+          rt.build_x86_seconds, rt.build_other_seconds, rt.index_seconds, rt.source_image_seconds
   FROM {konflux_pipelineruns} p
   LEFT JOIN run_platforms rp
     ON rp.cluster=p.cluster AND rp.namespace=p.namespace AND
@@ -57,6 +66,10 @@ WITH mappings AS (
     ON rt.cluster=p.cluster AND rt.namespace=p.namespace AND
        (rt.pipelinerun_uid=p.resource_uid OR (rt.pipelinerun_uid IS NULL AND rt.pipelinerun_name=p.pipelinerun_name))
   WHERE p.cluster=@cluster AND p.namespace=@namespace
+    -- Some ad-hoc test runs carry a real component's label (e.g. the
+    -- example-entitlement-test run labeled rhaiis-cuda-ubi9). They are
+    -- not builds of that component and must not pair with its GitLab job.
+    AND STARTS_WITH(p.pipelinerun_name, CONCAT(p.component, '-on-'))
     AND (@sha IS NULL OR p.commit_sha=@sha)
     AND (@variant IS NULL OR EXISTS (SELECT 1 FROM mappings m WHERE m.variant=@variant
          AND (p.component=m.component OR (m.prefix_match AND STARTS_WITH(p.component, m.prefix_base)))))
@@ -77,7 +90,13 @@ SELECT COALESCE(gl.sha,k.sha) AS sha, gl.variant, gl.architecture, k.component, 
        k.konflux_created_at, k.konflux_start_time, k.konflux_completion_time,
        SAFE_DIVIDE(TIMESTAMP_DIFF(k.konflux_completion_time, k.konflux_created_at, MICROSECOND), 1000000.0) AS konflux_wall_seconds,
        SAFE_DIVIDE(TIMESTAMP_DIFF(k.konflux_completion_time, k.konflux_start_time, MICROSECOND), 1000000.0) AS konflux_execution_seconds,
-       k.task_summary, gl.retry_count,
+        k.task_summary, gl.retry_count,
+        k.prefetch_seconds AS konflux_prefetch_seconds,
+        k.build_critical_seconds AS konflux_build_critical_seconds,
+        k.build_x86_seconds AS konflux_build_x86_seconds,
+        k.build_other_seconds AS konflux_build_other_seconds,
+        k.index_seconds AS konflux_index_seconds,
+        k.source_image_seconds AS konflux_source_image_seconds,
        CASE WHEN gl.pipeline_id IS NULL THEN 'konflux_only'
             WHEN k.pipelinerun_uid IS NULL THEN 'gitlab_only'
             ELSE 'matched' END AS match_status
