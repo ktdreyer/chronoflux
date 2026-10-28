@@ -1,3 +1,4 @@
+# Copy to chronoflux.toml (gitignored) and adjust for your environment.
 [scopes.rhaiis-containers]
 gitlab_host = "https://gitlab.com"
 gitlab_project = "redhat/rhel-ai/rhaiis/containers"

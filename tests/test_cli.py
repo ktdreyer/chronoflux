@@ -32,7 +32,7 @@ namespace = "ai-tenant"
 
 
 def test_config_keeps_scope_component_map():
-    config_path = Path(__file__).parents[1] / "chronoflux.toml"
+    config_path = Path(__file__).parents[1] / "chronoflux.example.toml"
     scope = load_config(config_path).scopes["rhaiis-containers"]
     assert scope.namespace == "ai-tenant"
     assert scope.api_server == "https://api.konflux.example.com:6443"

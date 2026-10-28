@@ -4,7 +4,7 @@ Chronoflux tracks and compares CI build times across GitLab CI, Konflux, and eve
 
 ## Local CLI
 
-The first implementation is a Python CLI for the `rhaiis-containers` scope. Use `uv.lock` for reproducible local dependencies (including the BigQuery client):
+The first implementation is a Python CLI for the `rhaiis-containers` scope. Use `uv.lock` for reproducible local dependencies (including the BigQuery client). Copy `chronoflux.example.toml` to `chronoflux.toml` (gitignored) and adjust it for your environment before running the CLI:
 
 ```sh
 uv sync --extra bigquery --extra test --frozen
